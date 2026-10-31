@@ -16,24 +16,35 @@ SRCS     := $(SRC_DIR)/main.c \
             $(SRC_DIR)/lista.c \
             $(SRC_DIR)/pilha.c \
             $(SRC_DIR)/fila.c \
-            $(SRC_DIR)/ordenacao.c
+            $(SRC_DIR)/ordenacao.c \
+            $(SRC_DIR)/io.c
 
 OBJS     := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 
 ifeq ($(OS),Windows_NT)
-    SHELL     := cmd.exe
-    TARGET    := biblioteca.exe
-    MKDIR_OBJ := if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
-    RM_CLEAN  := if exist "$(OBJ_DIR)" rmdir /S /Q "$(OBJ_DIR)" & if exist "$(TARGET)" del /F /Q "$(TARGET)"
-    RUN_CMD   := $(TARGET)
+    SHELL        := cmd.exe
+    TARGET       := biblioteca.exe
+    TEST2_TARGET := build/test_etapa2.exe
+    TEST3_TARGET := build/test_etapa3.exe
+    MKDIR_OBJ    := if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
+    RM_CLEAN     := if exist "$(OBJ_DIR)" rmdir /S /Q "$(OBJ_DIR)" & if exist "$(TARGET)" del /F /Q "$(TARGET)"
+    RUN_CMD      := $(TARGET)
+    RUN_TEST2    := build\test_etapa2.exe
+    RUN_TEST3    := build\test_etapa3.exe
 else
-    TARGET    := biblioteca
-    MKDIR_OBJ := mkdir -p $(OBJ_DIR)
-    RM_CLEAN  := rm -rf $(OBJ_DIR) $(TARGET)
-    RUN_CMD   := ./$(TARGET)
+    TARGET       := biblioteca
+    TEST2_TARGET := build/test_etapa2
+    TEST3_TARGET := build/test_etapa3
+    MKDIR_OBJ    := mkdir -p $(OBJ_DIR)
+    RM_CLEAN     := rm -rf $(OBJ_DIR) $(TARGET)
+    RUN_CMD      := ./$(TARGET)
+    RUN_TEST2    := ./$(TEST2_TARGET)
+    RUN_TEST3    := ./$(TEST3_TARGET)
 endif
 
-.PHONY: all clean run
+LIB_OBJS := $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
+
+.PHONY: all clean run test test2 test3
 
 all: $(TARGET)
 
@@ -45,6 +56,16 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 
 $(OBJ_DIR):
 	$(MKDIR_OBJ)
+
+test2: $(LIB_OBJS) | $(OBJ_DIR)
+	$(CC) $(CFLAGS) tests/test_etapa2.c $(LIB_OBJS) -o $(TEST2_TARGET)
+	$(RUN_TEST2)
+
+test3: $(LIB_OBJS) | $(OBJ_DIR)
+	$(CC) $(CFLAGS) tests/test_etapa3.c $(LIB_OBJS) -o $(TEST3_TARGET)
+	$(RUN_TEST3)
+
+test: test2 test3
 
 run: $(TARGET)
 	$(RUN_CMD)

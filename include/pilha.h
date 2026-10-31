@@ -1,9 +1,10 @@
 /**
  * @file pilha.h
- * @brief Pilha dinâmica encadeada (LIFO) para histórico de alterações de estado.
+ * @brief Pilha dinâmica encadeada (LIFO) para histórico de alterações de estado (Requisito R04).
  *
- * Regista as operações que modificam o estado do sistema (inserção/remoção de
- * livros e criação/remoção de relações no grafo), guardando o tipo de ação e os IDs.
+ * Regista apenas as operações concluídas com sucesso que modificam o estado do sistema
+ * (cadastro de livro, remoção de livro, adição de conexão e remoção de conexão),
+ * guardando o tipo de ação e os IDs envolvidos. Limitada apenas pela memória disponível.
  */
 
 #ifndef PILHA_H
@@ -12,24 +13,27 @@
 #include <stdbool.h>
 #include "bst.h"
 
+/** Quantidade máxima de ações recentes exibidas na consulta não destrutiva (R04) */
+#define MAX_HISTORICO_EXIBICAO 5
+
 /**
  * @brief Tipos de ações que alteram o estado do sistema e são registadas na Pilha.
  */
 typedef enum {
-    ACAO_INSERIR_LIVRO = 1,         /**< Inserção de um novo livro na BST */
+    ACAO_INSERIR_LIVRO = 1,         /**< Cadastro de um novo livro na BST */
     ACAO_REMOVER_LIVRO = 2,         /**< Remoção de um livro da BST */
-    ACAO_ADICIONAR_RELACAO = 3,     /**< Criação de aresta entre dois livros no Grafo */
-    ACAO_REMOVER_RELACAO = 4        /**< Remoção de aresta entre dois livros no Grafo */
+    ACAO_ADICIONAR_RELACAO = 3,     /**< Adição de conexão entre dois livros no Grafo */
+    ACAO_REMOVER_RELACAO = 4        /**< Remoção de conexão entre dois livros no Grafo */
 } TipoAcao;
 
 /**
- * @brief Registo de uma operação no histórico de alterações.
+ * @brief Registo de uma operação concluída com sucesso no histórico de alterações.
  */
 typedef struct {
     TipoAcao tipo;                  /**< Tipo de operação realizada */
-    int id_principal;               /**< ID do livro principal afetado (ou origem da relação) */
-    int id_secundario;              /**< ID do segundo livro (em operações de aresta; 0 se não aplicável) */
-    Livro snapshot_livro;           /**< Cópia dos dados do livro para auditoria/restauro */
+    int id_principal;               /**< ID do livro principal afetado (ou origem da conexão) */
+    int id_secundario;              /**< ID do segundo livro (em operações de conexão; 0 se não aplicável) */
+    Livro snapshot_livro;           /**< Cópia opcional dos dados do livro envolvido */
     char descricao[120];            /**< Resumo textual da operação realizada */
 } RegistoHistorico;
 
@@ -65,11 +69,11 @@ bool pilha_vazia(const Pilha *pilha);
 /**
  * @brief Empilha um novo registo de alteração de estado no topo (push).
  * @param pilha Ponteiro para a pilha.
- * @param tipo Tipo da ação realizada.
+ * @param tipo Tipo da ação realizada com sucesso.
  * @param id_principal ID do livro principal envolvido.
  * @param id_secundario ID do segundo livro (0 para operações de um único livro).
  * @param livro Ponteiro opcional para o Livro envolvido (pode ser NULL).
- * @param descricao Texto descritivo da operação.
+ * @param descricao Texto descritivo opcional da operação (pode ser NULL).
  * @return true se o registo foi empilhado com sucesso, false em erro de memória.
  */
 bool pilha_empilhar(Pilha *pilha, TipoAcao tipo, int id_principal, int id_secundario,
@@ -78,7 +82,7 @@ bool pilha_empilhar(Pilha *pilha, TipoAcao tipo, int id_principal, int id_secund
 /**
  * @brief Desempilha o registo mais recente do topo da pilha (pop).
  * @param pilha Ponteiro para a pilha.
- * @param registo_removido Ponteiro onde será copiado o registo retirado do topo.
+ * @param registo_removido Ponteiro opcional onde será copiado o registo retirado do topo.
  * @return true se desempilhou com sucesso, false se a pilha estava vazia.
  */
 bool pilha_desempilhar(Pilha *pilha, RegistoHistorico *registo_removido);
@@ -92,7 +96,9 @@ bool pilha_desempilhar(Pilha *pilha, RegistoHistorico *registo_removido);
 bool pilha_topo(const Pilha *pilha, RegistoHistorico *registo_topo);
 
 /**
- * @brief Exibe todo o histórico de operações (do mais recente para o mais antigo).
+ * @brief Consulta e imprime de forma não destrutiva até 5 ações mais recentes
+ *        (do topo para a base, sem remover elementos da pilha). Se houver menos
+ *        de 5 ações, exibe todas as disponíveis; se estiver vazia, informa o utilizador.
  * @param pilha Ponteiro constante para a pilha.
  */
 void pilha_exibir_historico(const Pilha *pilha);
@@ -111,4 +117,3 @@ const char* pilha_nome_acao(TipoAcao tipo);
 void pilha_liberar(Pilha *pilha);
 
 #endif /* PILHA_H */
-

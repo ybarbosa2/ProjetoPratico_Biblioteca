@@ -1,6 +1,6 @@
 /**
  * @file lista.c
- * @brief Implementação (stubs iniciais - Etapa 1) da Lista simplesmente encadeada.
+ * @brief Implementação da Lista simplesmente encadeada própria com inserção no fim (Requisito R03).
  */
 
 #include <stdio.h>
@@ -20,34 +20,117 @@ bool lista_vazia(const Lista *lista) {
 }
 
 bool lista_inserir_fim(Lista *lista, int id_livro, int distancia) {
-    (void)lista;
-    (void)id_livro;
-    (void)distancia;
-    /* Stub: será implementado nas próximas etapas */
-    return false;
+    NoLista *novo;
+
+    if (lista == NULL) {
+        return false;
+    }
+
+    novo = (NoLista *)malloc(sizeof(NoLista));
+    if (novo == NULL) {
+        return false;
+    }
+
+    novo->id_livro = id_livro;
+    novo->distancia = distancia;
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+        lista->fim = novo;
+    } else {
+        lista->fim->prox = novo;
+        lista->fim = novo;
+    }
+
+    lista->tamanho++;
+    return true;
 }
 
 bool lista_remover(Lista *lista, int id_livro) {
-    (void)lista;
-    (void)id_livro;
-    /* Stub: será implementado nas próximas etapas */
-    return false;
+    NoLista *atual;
+    NoLista *anterior = NULL;
+
+    if (lista_vazia(lista)) {
+        return false;
+    }
+
+    atual = lista->inicio;
+    while (atual != NULL && atual->id_livro != id_livro) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    if (atual == NULL) {
+        return false;
+    }
+
+    if (anterior == NULL) {
+        lista->inicio = atual->prox;
+    } else {
+        anterior->prox = atual->prox;
+    }
+
+    if (atual == lista->fim) {
+        lista->fim = anterior;
+    }
+
+    free(atual);
+    lista->tamanho--;
+    return true;
 }
 
 bool lista_contem(const Lista *lista, int id_livro) {
-    (void)lista;
-    (void)id_livro;
-    /* Stub: será implementado nas próximas etapas */
+    const NoLista *atual;
+
+    if (lista_vazia(lista)) {
+        return false;
+    }
+
+    atual = lista->inicio;
+    while (atual != NULL) {
+        if (atual->id_livro == id_livro) {
+            return true;
+        }
+        atual = atual->prox;
+    }
     return false;
 }
 
 void lista_exibir(const Lista *lista) {
-    (void)lista;
-    /* Stub: será implementado nas próximas etapas */
+    const NoLista *atual;
+    int pos = 1;
+
+    if (lista_vazia(lista)) {
+        printf("  [Lista vazia]\n");
+        return;
+    }
+
+    atual = lista->inicio;
+    while (atual != NULL) {
+        printf("  %d. Livro ID: %d (Nivel/Distancia: %d)\n",
+               pos, atual->id_livro, atual->distancia);
+        atual = atual->prox;
+        pos++;
+    }
 }
 
 void lista_liberar(Lista *lista) {
-    (void)lista;
-    /* Stub: será implementado nas próximas etapas */
-}
+    NoLista *atual;
+    NoLista *prox;
 
+    if (lista == NULL) {
+        return;
+    }
+
+    atual = lista->inicio;
+    while (atual != NULL) {
+        prox = atual->prox;
+        free(atual);
+        atual = prox;
+    }
+
+    lista->inicio = NULL;
+    lista->fim = NULL;
+    lista->tamanho = 0;
+}

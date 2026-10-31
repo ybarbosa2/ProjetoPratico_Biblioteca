@@ -1,6 +1,6 @@
 /**
  * @file fila.c
- * @brief Implementação (stubs iniciais - Etapa 1) da Fila dinâmica encadeada.
+ * @brief Implementação da Fila dinâmica encadeada própria (FIFO) para apoio à BFS (Requisito R05).
  */
 
 #include <stdio.h>
@@ -20,28 +20,81 @@ bool fila_vazia(const Fila *fila) {
 }
 
 bool fila_enfileirar(Fila *fila, int id_livro) {
-    (void)fila;
-    (void)id_livro;
-    /* Stub: será implementado nas próximas etapas */
-    return false;
+    NoFila *novo;
+
+    if (fila == NULL) {
+        return false;
+    }
+
+    novo = (NoFila *)malloc(sizeof(NoFila));
+    if (novo == NULL) {
+        return false;
+    }
+
+    novo->id_livro = id_livro;
+    novo->prox = NULL;
+
+    if (fila->frente == NULL) {
+        fila->frente = novo;
+        fila->tras = novo;
+    } else {
+        fila->tras->prox = novo;
+        fila->tras = novo;
+    }
+
+    fila->tamanho++;
+    return true;
 }
 
 bool fila_desenfileirar(Fila *fila, int *id_removido) {
-    (void)fila;
-    (void)id_removido;
-    /* Stub: será implementado nas próximas etapas */
-    return false;
+    NoFila *removido;
+
+    if (fila_vazia(fila)) {
+        return false;
+    }
+
+    removido = fila->frente;
+    if (id_removido != NULL) {
+        *id_removido = removido->id_livro;
+    }
+
+    fila->frente = removido->prox;
+    if (fila->frente == NULL) {
+        fila->tras = NULL;
+    }
+
+    free(removido);
+    fila->tamanho--;
+    return true;
 }
 
 bool fila_frente(const Fila *fila, int *id_frente) {
-    (void)fila;
-    (void)id_frente;
-    /* Stub: será implementado nas próximas etapas */
-    return false;
+    if (fila_vazia(fila)) {
+        return false;
+    }
+
+    if (id_frente != NULL) {
+        *id_frente = fila->frente->id_livro;
+    }
+    return true;
 }
 
 void fila_liberar(Fila *fila) {
-    (void)fila;
-    /* Stub: será implementado nas próximas etapas */
-}
+    NoFila *atual;
+    NoFila *prox;
 
+    if (fila == NULL) {
+        return;
+    }
+
+    atual = fila->frente;
+    while (atual != NULL) {
+        prox = atual->prox;
+        free(atual);
+        atual = prox;
+    }
+
+    fila->frente = NULL;
+    fila->tras = NULL;
+    fila->tamanho = 0;
+}
