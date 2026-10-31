@@ -1,0 +1,30 @@
+# Binários e executáveis
+bin/
+build/
+*.exe
+*.out
+*.app
+
+# Objetos e bibliotecas compiladas
+*.o
+*.obj
+*.a
+*.so
+*.dll
+
+# Ficheiros de depuração e temporários
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.log
+*~
+.DS_Store
+Thumbs.db
+
+# Ambientes de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
