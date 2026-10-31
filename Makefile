@@ -27,28 +27,32 @@ ifeq ($(OS),Windows_NT)
     TEST2_TARGET := build/test_etapa2.exe
     TEST3_TARGET := build/test_etapa3.exe
     TEST4_TARGET := build/test_etapa4.exe
+    TEST5_TARGET := build/test_integrado.exe
     MKDIR_OBJ    := if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
     RM_CLEAN     := if exist "$(OBJ_DIR)" rmdir /S /Q "$(OBJ_DIR)" & if exist "$(TARGET)" del /F /Q "$(TARGET)"
     RUN_CMD      := $(TARGET)
     RUN_TEST2    := build\test_etapa2.exe
     RUN_TEST3    := build\test_etapa3.exe
     RUN_TEST4    := build\test_etapa4.exe
+    RUN_TEST5    := build\test_integrado.exe
 else
     TARGET       := biblioteca
     TEST2_TARGET := build/test_etapa2
     TEST3_TARGET := build/test_etapa3
     TEST4_TARGET := build/test_etapa4
+    TEST5_TARGET := build/test_integrado
     MKDIR_OBJ    := mkdir -p $(OBJ_DIR)
     RM_CLEAN     := rm -rf $(OBJ_DIR) $(TARGET)
     RUN_CMD      := ./$(TARGET)
     RUN_TEST2    := ./$(TEST2_TARGET)
     RUN_TEST3    := ./$(TEST3_TARGET)
     RUN_TEST4    := ./$(TEST4_TARGET)
+    RUN_TEST5    := ./$(TEST5_TARGET)
 endif
 
 LIB_OBJS := $(filter-out $(OBJ_DIR)/main.o,$(OBJS))
 
-.PHONY: all clean run test test2 test3 test4
+.PHONY: all clean run test test2 test3 test4 test5
 
 all: $(TARGET)
 
@@ -73,7 +77,11 @@ test4: $(LIB_OBJS) | $(OBJ_DIR)
 	$(CC) $(CFLAGS) tests/test_etapa4.c $(LIB_OBJS) -o $(TEST4_TARGET)
 	$(RUN_TEST4)
 
-test: test2 test3 test4
+test5: $(LIB_OBJS) | $(OBJ_DIR)
+	$(CC) $(CFLAGS) tests/test_integrado.c $(LIB_OBJS) -o $(TEST5_TARGET)
+	$(RUN_TEST5)
+
+test: test2 test3 test4 test5
 
 run: $(TARGET)
 	$(RUN_CMD)

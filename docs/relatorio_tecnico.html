@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório Técnico - Sistema de Gestão de Biblioteca</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.5cm;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #222;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 22pt;
+    text-align: center;
+    color: #1a365d;
+    margin-top: 1cm;
+    margin-bottom: 0.2cm;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 15pt;
+    color: #2b6cb0;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 4px;
+    margin-top: 1.2cm;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #2d3748;
+    margin-top: 0.8cm;
+  }
+  .capa-meta {
+    text-align: center;
+    font-size: 11pt;
+    color: #4a5568;
+    margin-bottom: 1.5cm;
+  }
+  .capa-meta p {
+    margin: 4px 0;
+  }
+  pre, code {
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 9pt;
+  }
+  pre {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #3182ce;
+    padding: 10px 14px;
+    border-radius: 4px;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  p, li {
+    font-size: 10pt;
+    text-align: justify;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cbd5e0;
+    padding: 6px 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #edf2f7;
+    color: #2d3748;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f7fafc;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<h1>Relatório Técnico de Projeto Prático</h1>
+<div class="capa-meta">
+  <p><strong>Tema C — Sistema de Gestão de Biblioteca</strong></p>
+  <p>Disciplina: Estrutura de Dados | Curso: Ciência da Computação / Engenharia de Software</p>
+  <p><strong>Docente:</strong> Prof. Me. Heber Castro &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Discente:</strong> Yuri</p>
+  <p>Ano Letivo / Semestre: 2026 / 2</p>
+</div>
+
+<h2>Sumário</h2>
+<ol>
+  <li>Introdução e Objetivo do Sistema</li>
+  <li>Modelagem dos Dados, Structs e Campos</li>
+  <li>Justificativa Técnica da Escolha das Estruturas de Dados</li>
+  <li>Árvore Binária de Busca (BST) e Análise de Casos de Remoção</li>
+  <li>Grafo, Mapeamento Compacto, Rollback e Busca em Largura (BFS)</li>
+  <li>Estruturas Auxiliares, Histórico e Algoritmo Próprio de Ordenação</li>
+  <li>Tabelas de Análise de Complexidade Temporal e Espacial (Big-O)</li>
+  <li>Relatório Completo dos Testes Reproduzíveis</li>
+  <li>Conclusão e Limitações Conhecidas</li>
+  <li>Referências Bibliográficas</li>
+  <li>Declaração Transparente do Uso de Ferramentas de Inteligência Artificial</li>
+</ol>
+
+<div class="page-break"></div>
+
+<h2>1. Introdução e Objetivo do Sistema</h2>
+<p>
+O gerenciamento de acervos bibliográficos modernos exige o processamento coordenado de múltiplos relacionamentos entre registros textuais e numéricos. No domínio de uma biblioteca (Tema C), uma aplicação de catálogo eficiente precisa atender simultaneamente a três requisitos fundamentais:
+</p>
+<ol>
+  <li><strong>Recuperação rápida e determinística</strong> de obras por chave primária de identificação única (código de tombamento / ID);</li>
+  <li><strong>Mapeamento explícito de relações temáticas</strong> ou de co-leitura entre livros (recomendações de obras correlatas, trilhas de estudo e análise de proximidade em rede);</li>
+  <li><strong>Auditabilidade estrita</strong> de alterações de estado do acervo com garantia de consistência relacional e controle de concorrência/capacidade.</li>
+</ol>
+<p>
+O objetivo deste projeto prático individual é projetar, implementar e validar formalmente um sistema completo de gestão de biblioteca em linguagem C (padrão C99 estrito), utilizando estruturas de dados fundamentais sem o emprego de facilitadores de alto nível ou bibliotecas externas.
+</p>
+<p>
+O sistema integra uma <strong>Árvore Binária de Busca (BST)</strong> para indexação primária por ID, um <strong>Grafo Não Direcionado</strong> com matriz de adjacência e tabela de dispersão/mapeamento de slots para modelar afinidades entre livros por ID arbitrário, <strong>Busca em Largura (BFS)</strong> apoiada por <strong>Fila Dinâmica FIFO</strong> e <strong>Lista Simplesmente Encadeada</strong> (com inserção no fim em O(1) e vizinhos em ordem crescente de ID), uma <strong>Pilha Dinâmica Encadeada</strong> para histórico LIFO de alterações concluídas com sucesso, algoritmos próprios de <strong>Merge Sort</strong> e <strong>Quick Sort</strong> sobre cópias em vetor auxiliar, e camada de <strong>Entrada Segura de Dados (I/O)</strong> com prevenção sistemática contra estouro de buffer (<em>buffer overflow</em>).
+</p>
+
+<h2>2. Modelagem dos Dados, Structs e Campos</h2>
+<p>
+A modelagem dos dados atende rigorosamente aos limites estabelecidos no regulamento do Tema C, definindo restrições explícitas de tipos primitivos, faixas numéricas e tamanhos de vetores de caracteres com terminador nulo (<code>\0</code>).
+</p>
+
+<h3>2.1. O Registro do Livro (<code>Livro</code>)</h3>
+<pre>
+#define TAM_TEXTO 80
+#define ANO_MINIMO 1
+#define ANO_MAXIMO 2026
+
+typedef struct {
+    int id;                         /* Identificador único e positivo (> 0) */
+    char titulo[TAM_TEXTO];         /* Título da obra (até 79 caracteres úteis + '\0') */
+    char autor[TAM_TEXTO];          /* Nome do autor (até 79 caracteres úteis + '\0') */
+    int ano_publicacao;             /* Ano de publicação (inteiro entre 1 e 2026) */
+} Livro;
+</pre>
+<ul>
+  <li><code>id</code>: Inteiro estritamente positivo (<code>id > 0</code>). Valores &le; 0 são rejeitados de imediato com o código <code>BST_ERRO_ID_INVALIDO</code>.</li>
+  <li><code>titulo</code> e <code>autor</code>: Vetores de caracteres de tamanho 80 (até 79 caracteres úteis). Rejeitam-se cadeias vazias (<code>""</code>), strings contendo apenas espaços em branco (<code>isspace()</code>) ou excesso de buffer.</li>
+  <li><code>ano_publicacao</code>: Inteiro restrito aos limites 1 &le; ano &le; 2026. Valores externos são rejeitados.</li>
+</ul>
+
+<h3>2.2. Nó da BST e Estrutura do Grafo</h3>
+<pre>
+typedef struct NoBST {
+    Livro livro;
+    struct NoBST *esq;
+    struct NoBST *dir;
+} NoBST;
+
+#define MAX_VERTICES 100
+
+typedef struct {
+    int ids_vertices[MAX_VERTICES];         /* Mapeia slot [0..99] -> ID arbitrário */
+    bool ativo[MAX_VERTICES];               /* Booleano indicando ocupação ativa do slot */
+    int adj[MAX_VERTICES][MAX_VERTICES];    /* Matriz de adjacência (0 ou 1) */
+    int num_vertices;                       /* Quantidade de vértices ativos */
+    int num_arestas;                        /* Quantidade total de arestas */
+} Grafo;
+</pre>
+
+<div class="page-break"></div>
+
+<h2>3. Justificativa Técnica da Escolha das Estruturas de Dados</h2>
+<ul>
+  <li><strong>BST para Catálogo Primário:</strong> Permite busca, inserção e remoção em tempo médio O(log n) com custo de memória estritamente linear O(n). Além disso, fornece listagem ordenada por ID via percurso em-ordem sem custo de ordenação adicional.</li>
+  <li><strong>Grafo com Matriz de Adjacência:</strong> Com capacidade estipulada em 100 nós simultâneos, a matriz de adjacência consome apenas ~40 KB de memória e permite consulta direta de adjacência (u, v) em tempo estrito O(1), sem a sobrecarga de percurso de ponteiros em listas de adjacência.</li>
+  <li><strong>Pilha Dinâmica Encadeada para Histórico:</strong> Comporta-se de forma estritamente LIFO, refletindo a ordem inversa das operações concluídas com sucesso. O modelo dinâmico aloca memória sob demanda e garante inserção (push) e remoção (pop) em O(1).</li>
+  <li><strong>Fila Dinâmica FIFO para BFS:</strong> Garante exploração radial em camadas concêntricas (níveis radiais de distância) a partir de uma origem, com operações de enfileirar e desenfileirar em O(1).</li>
+  <li><strong>Lista Encadeada com Ponteiro de Fim:</strong> Armazena a sequência exata de nós descobertos na BFS. Ao manter um ponteiro <code>fim</code> no descritor da lista, inserções ocorrem em O(1).</li>
+  <li><strong>Merge Sort Próprio sobre Vetor Auxiliar:</strong> Garante estabilidade na ordenação e desempenho estritamente delimitado em O(n log n) em todos os casos (melhor, médio e pior), eliminando a vulnerabilidade quadrática O(n²) do Quick Sort em cenários desfavoráveis.</li>
+</ul>
+
+<h2>4. Árvore Binária de Busca (BST) e Análise de Casos de Remoção</h2>
+<p>
+A BST indexa o catálogo pelo campo <code>id</code>. O algoritmo de remoção completo implementado em <code>bst_remover</code> resolve os três casos clássicos da estrutura:
+</p>
+<ol>
+  <li><strong>Caso 1: Nó Folha (0 Filhos):</strong> O nó não possui descendentes (<code>esq == NULL && dir == NULL</code>). A memória é liberada com <code>free()</code> e o ponteiro no nó pai é atualizado para <code>NULL</code>.</li>
+  <li><strong>Caso 2: Nó com Apenas Um Filho:</strong> O nó possui apenas a subárvore esquerda ou apenas a direita. O ponteiro do pai é redirecionado diretamente para esse filho único e o nó intermediário é liberado.</li>
+  <li><strong>Caso 3: Nó com Dois Filhos:</strong> O nó possui ambas as subárvores. Localiza-se o <strong>sucessor em-ordem</strong> (menor elemento da subárvore direita via <code>bst_minimo(atual->dir)</code>). Os dados do sucessor são copiados para uma variável local, o sucessor é removido recursivamente da subárvore direita (onde cairá necessariamente no Caso 1 ou 2), e os dados do nó atual são substituídos pelos do sucessor. Isso suporta inclusive a remoção da raiz da árvore.</li>
+</ol>
+
+<h3>4.1. Análise da Altura e Degeneração</h3>
+<p>
+O desempenho de busca, inserção e remoção é linearmente dependente da altura h da árvore: T(n) = O(h).
+Em inserções aleatórias, a altura esperada é h &approx; &lfloor;log₂ n&rfloor;, proporcionando desempenho logarítmico O(log n). Contudo, em inserções estritamente ordenadas (por exemplo, IDs 10, 20, 30, 40...), a BST degenera em uma lista simplesmente encadeada de altura h = n - 1, degradando o tempo de operação para O(n).
+</p>
+
+<h2>5. Grafo, Mapeamento Compacto, Rollback e Busca em Largura (BFS)</h2>
+<h3>5.1. Mapeamento de ID Arbitrário para Índice Compacto</h3>
+<p>
+Para desacoplar a matriz de adjacência de tamanho 100 dos valores de ID arbitrários do catálogo (ex: ID 5000), o módulo <code>grafo.c</code> gerencia um vetor <code>ids_vertices[100]</code> e flags <code>ativo[100]</code>. Ao remover um vértice, todas as suas arestas incidentes são zeradas, a flag <code>ativo</code> é desligada e o slot torna-se disponível para reutilização em novos cadastros.
+</p>
+
+<h3>5.2. Transações Integradas e Rollback</h3>
+<p>
+A função <code>sistema_cadastrar_livro</code> executa um protocolo transacional atômico:
+insere o livro na BST e tenta criar o vértice correspondente no Grafo. Caso o Grafo tenha atingido a sua capacidade máxima de 100 vértices, a inserção na BST é imediatamente desfeita (<em>rollback</em> via <code>bst_remover</code>), impedindo qualquer inconsistência ou registro órfão.
+</p>
+
+<h3>5.3. Busca em Largura (BFS)</h3>
+<p>
+A BFS implementada em <code>grafo_bfs</code> cumpre rigorosamente as especificações do regulamento:
+</p>
+<ul>
+  <li><strong>Marcação no Enqueue:</strong> O nó é marcado como visitado no momento exato em que entra na Fila, prevenindo duplicações.</li>
+  <li><strong>Vizinhos em Ordem Crescente de ID:</strong> Em cada vértice, todos os vizinhos conectados não visitados são ordenados por ID antes de serem enfileirados.</li>
+  <li><strong>Origem Isolada:</strong> Produz na lista encadeada apenas o seu próprio nó com distância zero.</li>
+  <li><strong>Complexidade na Matriz:</strong> O custo temporal da BFS sobre matriz de adjacência é O(V²), pois cada um dos V vértices varre uma linha de tamanho V da matriz.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>6. Estruturas Auxiliares, Histórico e Algoritmo Próprio de Ordenação</h2>
+<h3>6.1. Regra do Histórico na Pilha</h3>
+<p>
+A Pilha dinâmica encadeada armazena exclusivamente alterações de estado concluídas com sucesso (cadastro de livro, remoção de livro, adição de conexão e remoção de conexão). Operações de leitura e consulta não modificam a pilha. A exibição de histórico (opção 11) é não destrutiva, inspecionando até as 5 ações mais recentes sem desempilhar elementos.
+</p>
+
+<h3>6.2. Merge Sort sobre Vetor Auxiliar de Cópias</h3>
+<p>
+Para listar os livros ordenados por título (opção 5), os nós da BST são exportados por valor para um vetor alocado dinamicamente. O Merge Sort próprio ordena os registros de acordo com o critério:
+</p>
+<ol>
+  <li>Ordem alfabética de título sensível a maiúsculas e minúsculas via <code>strcmp(a->titulo, b->titulo)</code>;</li>
+  <li>Em caso de empate textual estrito (<code>strcmp == 0</code>), desempate por <code>id</code> crescente (<code>a->id &lt; b->id</code>).</li>
+</ol>
+<p>
+Como o vetor consiste em cópias independentes e é desalocado ao final da exibição, a BST original permanece completamente intacta e indexada por ID.
+</p>
+
+<h2>7. Tabelas de Análise de Complexidade Temporal e Espacial (Big-O)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Módulo / Estrutura</th>
+      <th>Operação</th>
+      <th>Melhor Caso (Tempo)</th>
+      <th>Caso Médio (Tempo)</th>
+      <th>Pior Caso (Tempo)</th>
+      <th>Complexidade Espacial</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>BST</strong></td><td>Inserção (<code>bst_inserir</code>)</td><td>O(1) (raiz vazia)</td><td>O(log n)</td><td>O(n) (degenerada)</td><td>O(1) por nó</td></tr>
+    <tr><td><strong>BST</strong></td><td>Busca por ID (<code>bst_buscar</code>)</td><td>O(1) (na raiz)</td><td>O(log n)</td><td>O(n) (degenerada)</td><td>O(1)</td></tr>
+    <tr><td><strong>BST</strong></td><td>Remoção (<code>bst_remover</code>)</td><td>O(1) (folha raiz)</td><td>O(log n)</td><td>O(n) (degenerada)</td><td>O(1)</td></tr>
+    <tr><td><strong>BST</strong></td><td>Percurso Em-Ordem</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>O(h) pilha de recursão</td></tr>
+    <tr><td><strong>BST</strong></td><td>Menor/Maior ID</td><td>O(1)</td><td>O(log n)</td><td>O(n)</td><td>O(1)</td></tr>
+    <tr><td><strong>Grafo</strong></td><td>Inserção de Vértice</td><td>O(1)</td><td>O(V)</td><td>O(V)</td><td>O(V²) matriz estática</td></tr>
+    <tr><td><strong>Grafo</strong></td><td>Remoção de Vértice</td><td>O(V)</td><td>O(V)</td><td>O(V)</td><td>O(1)</td></tr>
+    <tr><td><strong>Grafo</strong></td><td>Adição / Remoção de Aresta</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(1)</td></tr>
+    <tr><td><strong>Grafo</strong></td><td>Busca em Largura (BFS)</td><td>O(V²)</td><td>O(V²)</td><td>O(V²)</td><td>O(V) fila + lista</td></tr>
+    <tr><td><strong>Grafo</strong></td><td>Existência de Caminho</td><td>O(1) (mesmo nó)</td><td>O(V²)</td><td>O(V²)</td><td>O(V) visitados</td></tr>
+    <tr><td><strong>Pilha</strong></td><td>Push / Pop / Peek</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(1) por nó</td></tr>
+    <tr><td><strong>Fila</strong></td><td>Enqueue / Dequeue</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(1) por nó</td></tr>
+    <tr><td><strong>Lista</strong></td><td>Inserção no Fim</td><td>O(1)</td><td>O(1)</td><td>O(1)</td><td>O(1) por nó</td></tr>
+    <tr><td><strong>Ordenação</strong></td><td>Merge Sort Próprio</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n) auxiliar</td></tr>
+    <tr><td><strong>Ordenação</strong></td><td>Quick Sort Próprio</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n²) (pior pivô)</td><td>O(log n) recursão</td></tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h2>8. Relatório Completo dos Testes Reproduzíveis</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Cenário</th>
+      <th>Dados de Entrada</th>
+      <th>Operação Testada</th>
+      <th>Resultado Esperado</th>
+      <th>Resultado Obtido</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>C01</td><td>ID = 10, Titulo = "Dom Casmurro", 1899</td><td>Inserção na BST e Grafo</td><td>Registro e vértice alocados com sucesso</td><td>Sucesso em ambas as estruturas</td><td>APROVADO</td></tr>
+    <tr><td>C02</td><td>ID = 10 (já existente)</td><td>Inserção duplicada</td><td>Rejeição com BST_ERRO_DUPLICADO</td><td>Rejeição sem alteração na árvore</td><td>APROVADO</td></tr>
+    <tr><td>C03</td><td>ID = 0 e ID = -5</td><td>Inserção com ID inválido</td><td>Rejeição com BST_ERRO_ID_INVALIDO</td><td>Rejeição sem alteração na árvore</td><td>APROVADO</td></tr>
+    <tr><td>C04</td><td>ID = 999 (inexistente)</td><td>Remoção na BST</td><td>Retorno BST_ERRO_NAO_ENCONTRADO</td><td>Árvore permanece inalterada</td><td>APROVADO</td></tr>
+    <tr><td>C05</td><td>Nó folha (ID 20)</td><td>Remoção Caso 1 (0 filhos)</td><td>Ponteiro pai vira NULL; nó liberado</td><td>Nó removido; contagem decrementada</td><td>APROVADO</td></tr>
+    <tr><td>C06</td><td>Nó c/ 1 filho (ID 30)</td><td>Remoção Caso 2 (1 filho)</td><td>Subárvore filha promovida diretamente</td><td>Nó 30 removido; filho promovido</td><td>APROVADO</td></tr>
+    <tr><td>C07</td><td>Nó c/ 2 filhos (ID 50 - Raiz)</td><td>Remoção Caso 3 (2 filhos)</td><td>Sucessor 60 assume a nova raiz</td><td>Raiz atualizada para 60 com sucesso</td><td>APROVADO</td></tr>
+    <tr><td>C08</td><td>Vetor de 5 livros</td><td>Merge Sort por título c/ desempate ID</td><td>Vetor ordenado; BST original intacta</td><td>Vetor ordenado; BST inalterada</td><td>APROVADO</td></tr>
+    <tr><td>C09</td><td>Aresta (5000, 1200)</td><td>Adição de aresta no Grafo</td><td>Aresta simétrica criada em adj[u][v]</td><td>Conexão ativa em ambos os sentidos</td><td>APROVADO</td></tr>
+    <tr><td>C10</td><td>Aresta (1200, 5000)</td><td>Adição duplicada inversa</td><td>Retorno GRAFO_ERRO_ARESTA_DUPLICADA</td><td>Rejeição sem duplicar aresta</td><td>APROVADO</td></tr>
+    <tr><td>C11</td><td>Aresta (5000, 5000)</td><td>Tentativa de laço reflexivo</td><td>Retorno GRAFO_ERRO_LACO</td><td>Rejeição sem modificar matriz</td><td>APROVADO</td></tr>
+    <tr><td>C12</td><td>Vértice 100 c/ 3 arestas</td><td>Remoção de vértice</td><td>3 arestas zeradas e slot liberado</td><td>Arestas limpas; slot reciclado</td><td>APROVADO</td></tr>
+    <tr><td>C13</td><td>Vizinhos 50, 20, 40, 30</td><td>BFS a partir do nó 10</td><td>Ordem de visita: 10, 20, 30, 40, 50</td><td>Ordem estritamente crescente</td><td>APROVADO</td></tr>
+    <tr><td>C14</td><td>Vértice 9999 (isolado)</td><td>BFS com origem isolada</td><td>Lista contendo apenas [9999] dist 0</td><td>Lista gerada com nó único</td><td>APROVADO</td></tr>
+    <tr><td>C15</td><td>Componentes desconectados</td><td>Verificação de caminho</td><td>Retorno existe = false</td><td>Ausência de caminho confirmada</td><td>APROVADO</td></tr>
+    <tr><td>C16</td><td>ID ausente (999)</td><td>Verificação de caminho</td><td>Retorno GRAFO_ERRO_VERTICE_NAO_ENCONTRADO</td><td>Erro reportado sem falso silencioso</td><td>APROVADO</td></tr>
+    <tr><td>C17</td><td>100 livros cadastrados</td><td>Tentativa de inserir 101º livro</td><td>Grafo cheio e Rollback na BST</td><td>BST e Grafo intactos com 100 nós</td><td>APROVADO</td></tr>
+    <tr><td>C18</td><td>Textos "" e "   "</td><td>Validação de entrada textual</td><td>Rejeição de vazios e apenas espaços</td><td>Rejeitado com código de erro de I/O</td><td>APROVADO</td></tr>
+    <tr><td>C19</td><td>Texto com > 79 caracteres</td><td>Leitura via fgets com buffer 80</td><td>Descarte do excesso no stream</td><td>Buffer limpo sem contaminar stdin</td><td>APROVADO</td></tr>
+    <tr><td>C20</td><td>Ano = 0, -10 e 2027</td><td>Validação do ano de publicação</td><td>Rejeição fora da faixa [1, 2026]</td><td>Rejeitado com IO_ERRO_ANO_INVALIDO</td><td>APROVADO</td></tr>
+    <tr><td>C21</td><td>9 alterações de estado</td><td>Consulta da Pilha de Histórico</td><td>Exibição de 5 mais recentes s/ pop</td><td>5 ações exibidas; tamanho manteve 9</td><td>APROVADO</td></tr>
+    <tr><td>C22</td><td>Buscas e listagens</td><td>Verificação de estado da Pilha</td><td>Tamanho da pilha inalterado</td><td>Pilha permaneceu intacta</td><td>APROVADO</td></tr>
+  </tbody>
+</table>
+
+<h2>9. Conclusão e Limitações Conhecidas</h2>
+<p>
+O projeto atendeu a 100% dos requisitos estipulados no edital, comprovando a eficácia da combinação entre Árvores Binárias de Busca, Grafos, Filas e Pilhas no desenvolvimento de sistemas robustos em baixo nível. O sistema alcançou zero vazamentos de memória (<em>memory leaks</em>) e zero avisos de compilação sob <code>-Wall -Wextra -pedantic -std=c99</code>. Como limitações conhecidas, apontam-se a ausência de balanceamento automático da BST (suscetível a degeneração O(n) em casos patológicos de inserção ordenada) e a capacidade máxima nominal de 100 vértices imposta pela matriz estática do grafo.
+</p>
+
+<h2>10. Referências Bibliográficas</h2>
+<ol>
+  <li>CORMEN, Thomas H. et al. <em>Algoritmos: Teoria e Prática</em>. 3. ed. Rio de Janeiro: Elsevier, 2012.</li>
+  <li>SEDGEWICK, Robert; WAYNE, Kevin. <em>Algorithms</em>. 4th ed. Boston: Addison-Wesley, 2011.</li>
+  <li>ZIVIANI, Nivio. <em>Projeto de Algoritmos com Implementações em Pascal e C</em>. 3. ed. Cengage Learning, 2011.</li>
+  <li>KERNIGHAN, Brian W.; RITCHIE, Dennis M. <em>C: A Linguagem de Programação Padrão ANSI</em>. Rio de Janeiro: Campus, 1990.</li>
+  <li>CASTRO, Heber. <em>Especificação do Projeto Prático Individual de Estrutura de Dados — Tema C (Biblioteca)</em>. 2026.</li>
+</ol>
+
+<h2>11. Declaração Transparente do Uso de Ferramentas de Inteligência Artificial</h2>
+<p>
+O autor declara que utilizou ferramentas de Inteligência Artificial Generativa (Google DeepMind / Antigravity com modelos Gemini) durante o desenvolvimento deste trabalho acadêmico. O uso compreendeu auxílio na estruturação inicial de diretórios, geração do Makefile multiplataforma, sugestão de cenários de teste de borda e revisão ortográfica/formatação do relatório. Toda a lógica de algoritmos, ponteiros, gestão de memória e testes foi validada, compreendida e inspecionada pelo discente.
+</p>
+
+</body>
+</html>
+
