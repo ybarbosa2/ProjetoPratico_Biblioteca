@@ -1,6 +1,6 @@
 /**
  * @file main.c
- * @brief Menu interativo do Sistema de Gestão de Biblioteca (Etapa 3).
+ * @brief Menu interativo do Sistema de Gestão de Biblioteca (Etapa 4).
  */
 
 #include <stdio.h>
@@ -24,7 +24,7 @@ static void exibir_menu(void) {
     printf(" [4] Percursos e estatisticas da BST\n");
     printf(" [5] Adicionar relacao entre livros (Grafo + Pilha)\n");
     printf(" [6] Remover relacao entre livros (Grafo + Pilha)\n");
-    printf(" [7] Consultar livros relacionados / Busca em Largura (BFS)\n");
+    printf(" [7] Consultar conexoes / Busca em Largura (BFS)\n");
     printf(" [8] Exibir grafo de relacoes entre livros\n");
     printf(" [9] Listar catalogo ordenado por Titulo (R06)\n");
     printf("[10] Consultar historico de alteracoes (Pilha - R04)\n");
@@ -33,10 +33,10 @@ static void exibir_menu(void) {
     printf("Escolha uma opcao: ");
 }
 
-static void cadastrar_livro_menu(NoBST **catalogo, Pilha *historico) {
+static void cadastrar_livro_menu(NoBST **catalogo, Grafo *grafo, Pilha *historico) {
     Livro novo;
     StatusIO st_io;
-    StatusBST st_bst;
+    StatusGrafo st_sis;
 
     printf("\n--- Cadastrar Novo Livro ---\n");
 
@@ -73,12 +73,13 @@ static void cadastrar_livro_menu(NoBST **catalogo, Pilha *historico) {
         return;
     }
 
-    st_bst = bst_inserir(catalogo, novo);
-    if (st_bst == BST_SUCESSO) {
-        printf("[OK] Livro cadastrado com sucesso no catalogo!\n");
+    /* Inserção atômica no catálogo e no grafo com rollback garantido */
+    st_sis = sistema_cadastrar_livro(catalogo, grafo, novo);
+    if (st_sis == GRAFO_SUCESSO) {
+        printf("[OK] Livro cadastrado com sucesso no catalogo e no grafo!\n");
         pilha_empilhar(historico, ACAO_INSERIR_LIVRO, novo.id, 0, &novo, "Cadastro de livro");
     } else {
-        printf("[!] Falha ao inserir na BST: %s\n", bst_status_mensagem(st_bst));
+        printf("[!] Falha no cadastro: %s\n", grafo_status_mensagem(st_sis));
     }
 }
 
@@ -104,11 +105,11 @@ static void buscar_livro_menu(NoBST *catalogo) {
     }
 }
 
-static void remover_livro_menu(NoBST **catalogo, Pilha *historico) {
+static void remover_livro_menu(NoBST **catalogo, Grafo *grafo, Pilha *historico) {
     int id;
     Livro removido;
     StatusIO st_io;
-    StatusBST st_bst;
+    StatusGrafo st_sis;
 
     printf("\n--- Remover Livro por ID ---\n");
     printf("Digite o ID do livro a remover: ");
@@ -118,13 +119,14 @@ static void remover_livro_menu(NoBST **catalogo, Pilha *historico) {
         return;
     }
 
-    st_bst = bst_remover(catalogo, id, &removido);
-    if (st_bst == BST_SUCESSO) {
-        printf("[OK] Livro removido com sucesso da BST!\n");
+    /* Remoção atômica na BST e no Grafo */
+    st_sis = sistema_remover_livro(catalogo, grafo, id, &removido);
+    if (st_sis == GRAFO_SUCESSO) {
+        printf("[OK] Livro e suas conexoes foram removidos com sucesso!\n");
         livro_exibir(&removido);
         pilha_empilhar(historico, ACAO_REMOVER_LIVRO, id, 0, &removido, "Remocao de livro");
     } else {
-        printf("[!] Falha na remocao: %s\n", bst_status_mensagem(st_bst));
+        printf("[!] Falha na remocao: %s\n", grafo_status_mensagem(st_sis));
     }
 }
 
@@ -157,6 +159,108 @@ static void percursos_bst_menu(NoBST *catalogo) {
     printf("-----------------------------------------\n");
 }
 
+static void adicionar_relacao_menu(Grafo *grafo, Pilha *historico) {
+    int id1, id2;
+    StatusIO st_io;
+    StatusGrafo st_g;
+
+    printf("\n--- Adicionar Relacao entre Livros ---\n");
+    printf("Digite o ID do primeiro livro: ");
+    st_io = io_ler_id(&id1, stdin);
+    if (st_io != IO_SUCESSO) {
+        printf("[!] %s\n", io_mensagem_erro(st_io));
+        return;
+    }
+
+    printf("Digite o ID do segundo livro: ");
+    st_io = io_ler_id(&id2, stdin);
+    if (st_io != IO_SUCESSO) {
+        printf("[!] %s\n", io_mensagem_erro(st_io));
+        return;
+    }
+
+    st_g = grafo_adicionar_aresta(grafo, id1, id2);
+    if (st_g == GRAFO_SUCESSO) {
+        printf("[OK] Relacao adicionada com sucesso entre o livro %d e o livro %d!\n", id1, id2);
+        pilha_empilhar(historico, ACAO_ADICIONAR_RELACAO, id1, id2, NULL, "Adicao de conexao");
+    } else {
+        printf("[!] Falha ao adicionar relacao: %s\n", grafo_status_mensagem(st_g));
+    }
+}
+
+static void remover_relacao_menu(Grafo *grafo, Pilha *historico) {
+    int id1, id2;
+    StatusIO st_io;
+    StatusGrafo st_g;
+
+    printf("\n--- Remover Relacao entre Livros ---\n");
+    printf("Digite o ID do primeiro livro: ");
+    st_io = io_ler_id(&id1, stdin);
+    if (st_io != IO_SUCESSO) {
+        printf("[!] %s\n", io_mensagem_erro(st_io));
+        return;
+    }
+
+    printf("Digite o ID do segundo livro: ");
+    st_io = io_ler_id(&id2, stdin);
+    if (st_io != IO_SUCESSO) {
+        printf("[!] %s\n", io_mensagem_erro(st_io));
+        return;
+    }
+
+    st_g = grafo_remover_aresta(grafo, id1, id2);
+    if (st_g == GRAFO_SUCESSO) {
+        printf("[OK] Relacao removida com sucesso entre o livro %d e o livro %d!\n", id1, id2);
+        pilha_empilhar(historico, ACAO_REMOVER_RELACAO, id1, id2, NULL, "Remocao de conexao");
+    } else {
+        printf("[!] Falha ao remover relacao: %s\n", grafo_status_mensagem(st_g));
+    }
+}
+
+static void consultar_bfs_menu(Grafo *grafo, NoBST *catalogo) {
+    int id_origem;
+    StatusIO st_io;
+    StatusGrafo st_g;
+    Lista visitados;
+    NoLista *atual;
+    int pos = 1;
+
+    printf("\n--- Busca em Largura (BFS) / Livros Relacionados ---\n");
+    printf("Digite o ID do livro de partida da busca: ");
+    st_io = io_ler_id(&id_origem, stdin);
+    if (st_io != IO_SUCESSO) {
+        printf("[!] %s\n", io_mensagem_erro(st_io));
+        return;
+    }
+
+    lista_inicializar(&visitados);
+    st_g = grafo_bfs(grafo, id_origem, &visitados);
+
+    if (st_g != GRAFO_SUCESSO) {
+        printf("[!] Falha na BFS: %s\n", grafo_status_mensagem(st_g));
+        lista_liberar(&visitados);
+        return;
+    }
+
+    printf("\n--- Ordem de Descoberta da BFS (Origem ID %d) ---\n", id_origem);
+    atual = visitados.inicio;
+    while (atual != NULL) {
+        NoBST *no = bst_buscar(catalogo, atual->id_livro);
+        if (no != NULL) {
+            printf("  %d. [Nivel/Distancia: %d] ID %-4d | Titulo: %s\n",
+                   pos, atual->distancia, atual->id_livro, no->livro.titulo);
+        } else {
+            printf("  %d. [Nivel/Distancia: %d] ID %-4d\n",
+                   pos, atual->distancia, atual->id_livro);
+        }
+        atual = atual->prox;
+        pos++;
+    }
+    printf("----------------------------------------------------\n");
+
+    lista_liberar(&visitados);
+}
+
 int main(void) {
     NoBST *catalogo_bst = bst_criar();
     Grafo grafo_relacoes;
@@ -182,28 +286,28 @@ int main(void) {
 
         switch (opcao) {
             case 1:
-                cadastrar_livro_menu(&catalogo_bst, &historico_acoes);
+                cadastrar_livro_menu(&catalogo_bst, &grafo_relacoes, &historico_acoes);
                 break;
             case 2:
                 buscar_livro_menu(catalogo_bst);
                 break;
             case 3:
-                remover_livro_menu(&catalogo_bst, &historico_acoes);
+                remover_livro_menu(&catalogo_bst, &grafo_relacoes, &historico_acoes);
                 break;
             case 4:
                 percursos_bst_menu(catalogo_bst);
                 break;
             case 5:
-                printf("\n[Etapa 4] Adicionar relacao no Grafo sera ativado na Etapa 4.\n");
+                adicionar_relacao_menu(&grafo_relacoes, &historico_acoes);
                 break;
             case 6:
-                printf("\n[Etapa 4] Remover relacao no Grafo sera ativado na Etapa 4.\n");
+                remover_relacao_menu(&grafo_relacoes, &historico_acoes);
                 break;
             case 7:
-                printf("\n[Etapa 4] Busca em Largura (BFS) sera ativada na Etapa 4.\n");
+                consultar_bfs_menu(&grafo_relacoes, catalogo_bst);
                 break;
             case 8:
-                printf("\n[Etapa 4] Exibir Grafo sera ativado na Etapa 4.\n");
+                grafo_exibir(&grafo_relacoes, catalogo_bst);
                 break;
             case 9:
                 bst_listar_ordenado(catalogo_bst, ORDENAR_POR_TITULO);
