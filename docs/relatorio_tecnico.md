@@ -3,7 +3,7 @@
 ## TEMA C — SISTEMA DE GESTÃO DE BIBLIOTECA
 ### Disciplina: Estrutura de Dados
 **Docente:** Prof. Me. Heber Castro  
-**Discente:** Yuri  
+**Discente:** Yuri Barbosa 
 **Ano Letivo / Semestre:** 2026 / 2  
 
 ---
